@@ -1,0 +1,22 @@
+hash: 72674f5a705c247fc61361978b080264af90b0b54483b60f5cb0e6360d6aadb8
+updated: 2017-02-12T16:19:19.345920538+09:00
+imports:
+- name: github.com/garyburd/redigo
+  version: 908534c8b97586a4597e3fa195875d2d26502b97
+  subpackages:
+  - internal
+  - redis
+- name: github.com/pkg/errors
+  version: 645ef00459ed84a119197bfb8d8205042c6df63d
+- name: github.com/Sirupsen/logrus
+  version: d26492970760ca5d33129d2d799e34be5c4782eb
+- name: github.com/vulcand/oxy
+  version: 12aa65630360a8ab1827975bd46491a358094cd9
+  subpackages:
+  - forward
+  - utils
+- name: golang.org/x/sys
+  version: d75a52659825e75fff6158388dddc6a5b04f9ba5
+  subpackages:
+  - unix
+testImports: []

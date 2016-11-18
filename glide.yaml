@@ -1,0 +1,12 @@
+package: github.com/unblee/mirror
+import:
+- package: github.com/vulcand/oxy
+  subpackages:
+  - forward
+- package: github.com/Sirupsen/logrus
+  version: v0.11.0
+- package: github.com/garyburd/redigo
+  subpackages:
+  - redis
+- package: github.com/pkg/errors
+  version: v0.8.0
