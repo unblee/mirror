@@ -40,6 +40,7 @@ archive: bin-build
 .PHONY: dh-release
 dh-release: docker-build
 	docker push $(USERNAME)/$(BINNAME):$(VERSION)
+	docker push $(USERNAME)/$(BINNAME):latest
 
 .PHONY: docker-build
 docker-build: bin-build
