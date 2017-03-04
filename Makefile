@@ -31,6 +31,7 @@ DOCKER_RUN     := docker run -it --rm $(DOCKER_RUN_OPT) golang:$(GO_VERSION)-alp
 
 .PHONY: gh-release
 gh-release: archive
+	git push
 	$(DOCKER_RUN) sh scripts/gh_release.sh
 
 .PHONY: archive
