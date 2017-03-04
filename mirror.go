@@ -48,7 +48,7 @@ Available Environment Values:
 `
 
 const (
-	REDIS_HASH_KEY = "mirror-store" // Use this hash key in Redis
+	DEFAULT_REDIS_HASH_KEY = "mirror-store" // Use this hash key in Redis
 
 	DEFAULT_LISTEN_PORT       = "8080"
 	DEFAULT_DEFAULT_DEST_PORT = "80"
@@ -91,8 +91,12 @@ func main() {
 	if dbPort == "" {
 		dbPort = DEFAULT_DB_PORT
 	}
+	redisHashKey := os.Getenv("REDIS_HASH_KEY")
+	if redisHashKey == "" {
+		redisHashKey = DEFAULT_REDIS_HASH_KEY
+	}
 
-	redi, err := newRedis(dbHost, dbPort, defaultDestURL)
+	redi, err := newRedis(dbHost, dbPort, defaultDestURL, redisHashKey)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -234,31 +238,33 @@ type DB interface {
 }
 
 type Redis struct {
-	conn redis.Conn
+	conn    redis.Conn
+	hashKey string
 }
 
-func newRedis(host, port, defaultDestURL string) (DB, error) {
+func newRedis(host, port, defaultDestURL, hashKey string) (DB, error) {
 	c, err := redis.Dial("tcp", host+":"+port)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed start connection to Redis")
 	}
-	_, err = c.Do("HSET", REDIS_HASH_KEY, "default", defaultDestURL)
+	_, err = c.Do("HSET", hashKey, "default", defaultDestURL)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Failed Redis Command 'HSET %s default %s'", REDIS_HASH_KEY, defaultDestURL)
+		return nil, errors.Wrapf(err, "Failed Redis Command 'HSET %s default %s'", hashKey, defaultDestURL)
 	}
 	r := &Redis{
-		conn: c,
+		conn:    c,
+		hashKey: hashKey,
 	}
 	return r, nil
 }
 
 func (r *Redis) get(field string) (string, error) {
-	reply, err := redis.String(r.conn.Do("HGET", REDIS_HASH_KEY, field))
+	reply, err := redis.String(r.conn.Do("HGET", r.hashKey, field))
 	switch {
 	case err == redis.ErrNil: // not exist field
-		reply, _ = redis.String(r.conn.Do("HGET", REDIS_HASH_KEY, "default"))
+		reply, _ = redis.String(r.conn.Do("HGET", r.hashKey, "default"))
 	case err != nil:
-		return "", errors.Wrapf(err, "Failed Redis Command 'HGET %s %s'", REDIS_HASH_KEY, field)
+		return "", errors.Wrapf(err, "Failed Redis Command 'HGET %s %s'", r.hashKey, field)
 	}
 	return reply, nil
 }
