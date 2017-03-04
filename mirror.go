@@ -34,7 +34,7 @@ Available Environment Values:
   DEFAULT_DEST_PORT        Default destination port number
     default: 80
 
-  BASE_DOMAIN                 Base Domain
+  BASE_DOMAIN              Base Domain
     default: not set(required)
 
   DEFAULT_DEST_URL         Default destination URL
@@ -45,6 +45,9 @@ Available Environment Values:
 
   DB_PORT                  Port number of the database to connect
     default: 6379
+
+  DEFAULT_REDIS_HASH_KEY   Hash key of Redis
+    default: mirror-store
 `
 
 const (
