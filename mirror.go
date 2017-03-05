@@ -46,7 +46,7 @@ Available Environment Values:
   DB_PORT                  Port number of the database to connect
     default: 6379
 
-  DEFAULT_REDIS_HASH_KEY   Hash key of Redis
+  REDIS_HASH_KEY   Hash key of Redis
     default: mirror-store
 `
 
