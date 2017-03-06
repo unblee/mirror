@@ -154,13 +154,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		log.Errorln(err)
 		return
 	}
-	var withPath bool
-	if req.URL.Path == "/" {
-		withPath = false
-	} else {
-		withPath = true
-	}
-	req.URL, err = p.fetchDestURL(vhost, withPath)
+	req.URL, err = p.fetchDestURL(vhost, req.URL.Path)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintln(w, "404 Upstream Not Found")
@@ -185,10 +179,11 @@ func (p *Proxy) splitVirtualHostName(vHostName string) (string, error) {
 	} else {
 		host = vHostName
 	}
+	// TODO: virtualHostNameが空のときはデフォルトにリダイレクトする
 	return strings.TrimSuffix(host, "."+p.baseDomain), nil
 }
 
-func (p *Proxy) fetchDestURL(virtualHostName string, rmRawDestPath bool) (*url.URL, error) {
+func (p *Proxy) fetchDestURL(virtualHostName, origReqPath string) (*url.URL, error) {
 	// rawDest: e.g.) "http://example.com"
 	//          e.g.) "http://example.com:9999"
 	//          e.g.) "http://example.com:9999/target/path"
@@ -207,12 +202,12 @@ func (p *Proxy) fetchDestURL(virtualHostName string, rmRawDestPath bool) (*url.U
 	}
 
 	// remove path
-	if rmRawDestPath {
+	if origReqPath != "/" {
 		u, err := url.Parse(rawDest)
 		if err != nil {
 			return nil, errors.Wrapf(err, "Invalid Upstream URL '%s'", rawDest)
 		}
-		u.Path = ""
+		u.Path = origReqPath
 		rawDest = u.String()
 	}
 

@@ -149,7 +149,7 @@ func TestProxy_fetchDestURL(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		actualURL, err := p.fetchDestURL(tc.virtualHostName, false)
+		actualURL, err := p.fetchDestURL(tc.virtualHostName, "/")
 		if err != nil {
 			t.Fatal(err)
 		}
