@@ -183,49 +183,49 @@ func (p *Proxy) splitVirtualHostName(vHostName string) (string, error) {
 }
 
 func (p *Proxy) fetchDestURL(virtualHostName string) (*url.URL, error) {
-	// rawDestURL: e.g.) "http://example.com"
-	//             e.g.) "http://example.com:9999"
-	//             e.g.) "http://example.com:9999/target/path"
-	//             e.g.) "http://example.com:9999/target?q1=foo&q2=bar
-	//             e.g.) "http://example.com:9999/{}/path" '{}' is replaced the virtual host name
-	rawDestURL, err := p.db.get(virtualHostName)
+	// rawDest: e.g.) "http://example.com"
+	//          e.g.) "http://example.com:9999"
+	//          e.g.) "http://example.com:9999/target/path"
+	//          e.g.) "http://example.com:9999/target?q1=foo&q2=bar
+	//          e.g.) "http://example.com:9999/{}/path" '{}' is replaced the virtual host name
+	rawDest, err := p.db.get(virtualHostName)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed get upstream URL from database")
 	}
-	if rawDestURL == "" {
+	if rawDest == "" {
 		return nil, errors.Wrap(err, "Not exists upstream")
 	}
 
-	destURL, err := p.buildDestURL(rawDestURL, virtualHostName)
+	destURL, err := p.buildDestURL(rawDest, virtualHostName)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed build upstream URL")
 	}
 	return destURL, nil
 }
 
-func (p *Proxy) buildDestURL(rawDestURL, virtualHostName string) (*url.URL, error) {
-	if !strings.Contains(rawDestURL, "://") {
-		rawDestURL = "http://" + rawDestURL
+func (p *Proxy) buildDestURL(rawDest, virtualHostName string) (*url.URL, error) {
+	if !strings.Contains(rawDest, "://") {
+		rawDest = "http://" + rawDest
 	}
-	parsedURL, err := url.Parse(rawDestURL)
+	rawDestURL, err := url.Parse(rawDest)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Invalid Upstream URL '%s'", rawDestURL)
+		return nil, errors.Wrapf(err, "Invalid Upstream URL '%s'", rawDest)
 	}
 
 	var hostport string
-	if strings.Contains(parsedURL.Host, ":") { // when contains a port number
-		hostport = parsedURL.Host
+	if strings.Contains(rawDestURL.Host, ":") { // when contains a port number
+		hostport = rawDestURL.Host
 	} else {
-		hostport = net.JoinHostPort(parsedURL.Host, p.defaultDestPort)
+		hostport = net.JoinHostPort(rawDestURL.Host, p.defaultDestPort)
 	}
 
-	dest := parsedURL.Scheme + "://" + hostport
+	dest := rawDestURL.Scheme + "://" + hostport
 	switch {
-	case parsedURL.Path != "":
-		p := strings.Replace(parsedURL.Path, "{}", virtualHostName, -1)
+	case rawDestURL.Path != "":
+		p := strings.Replace(rawDestURL.Path, "{}", virtualHostName, -1)
 		dest = dest + p
-	case parsedURL.RawQuery != "":
-		dest = dest + "?" + parsedURL.RawQuery
+	case rawDestURL.RawQuery != "":
+		dest = dest + "?" + rawDestURL.RawQuery
 	}
 
 	destURL, err := url.Parse(dest)
