@@ -171,6 +171,8 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func (p *Proxy) splitVirtualHostName(vHostName string) (string, error) {
 	var host string
 	var err error
+
+	// trim a port number
 	if strings.Contains(vHostName, ":") {
 		host, _, err = net.SplitHostPort(vHostName)
 		if err != nil {
@@ -179,7 +181,10 @@ func (p *Proxy) splitVirtualHostName(vHostName string) (string, error) {
 	} else {
 		host = vHostName
 	}
-	// TODO: virtualHostNameが空のときはデフォルトにリダイレクトする
+
+	if !strings.Contains(host, p.baseDomain) { // when virtual host name is empty
+		return "default", nil
+	}
 	return strings.TrimSuffix(host, "."+p.baseDomain), nil
 }
 
