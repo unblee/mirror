@@ -76,7 +76,7 @@ func newTestDestServer(destAddr, destPort, expectMsg string) *httptest.Server {
 }
 
 func newTestProxyServer(listenPort, destPort, baseDomain string, testDB DB, listenAddr string) (*httptest.Server, error) {
-	p, err := newProxy(listenPort, destPort, baseDomain, testDB)
+	p, err := newProxy(destPort, baseDomain, testDB)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func TestProxy_splitVirtualHostName(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		p, _ := newProxy("", "", tc.baseDomain, nil)
+		p, _ := newProxy("", tc.baseDomain, nil)
 		actual, err := p.splitVirtualHostName(tc.host)
 		if err != nil {
 			t.Fatal(err)
@@ -145,7 +145,7 @@ func TestProxy_fetchDestURL(t *testing.T) {
 
 	for _, tc := range cases {
 		testDB := newTestDB(tc.rawDestURL, tc.defaultDestURL)
-		p, err := newProxy("", "", "", testDB)
+		p, err := newProxy("", "", testDB)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -193,7 +193,7 @@ func TestProxy_buildDestURL(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		p, err := newProxy("", tc.destPort, "", nil)
+		p, err := newProxy(tc.destPort, "", nil)
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -80,10 +80,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	listenPort := os.Getenv("LISTEN_PORT")
-	if listenPort == "" {
-		listenPort = DEFAULT_LISTEN_PORT
-	}
 	destPort := os.Getenv("DEST_PORT")
 	if destPort == "" {
 		destPort = DEFAULT_DEFAULT_DEST_PORT
@@ -113,31 +109,35 @@ func main() {
 	}
 	defer redi.close()
 
-	proxy, err := newProxy(listenPort, destPort, baseDomain, redi)
+	proxy, err := newProxy(destPort, baseDomain, redi)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	s := newProxyServer(proxy)
+	listenPort := os.Getenv("LISTEN_PORT")
+	if listenPort == "" {
+		listenPort = DEFAULT_LISTEN_PORT
+	}
+
+	s := newProxyServer(proxy, listenPort)
 	s.ListenAndServe()
 }
 
-func newProxyServer(handler *Proxy) *http.Server {
+func newProxyServer(handler *Proxy, listenPort string) *http.Server {
 	return &http.Server{
-		Addr:    ":" + handler.listenPort,
+		Addr:    ":" + listenPort,
 		Handler: handler,
 	}
 }
 
 type Proxy struct {
 	forwarder       *forward.Forwarder
-	listenPort      string
 	defaultDestPort string
 	baseDomain      string
 	db              DB
 }
 
-func newProxy(listenPort, defaultDestPort, baseDomain string, db DB) (*Proxy, error) {
+func newProxy(defaultDestPort, baseDomain string, db DB) (*Proxy, error) {
 	fwd, err := forward.New()
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to initialize forward proxy")
@@ -145,7 +145,6 @@ func newProxy(listenPort, defaultDestPort, baseDomain string, db DB) (*Proxy, er
 
 	p := &Proxy{
 		forwarder:       fwd,
-		listenPort:      listenPort,
 		defaultDestPort: defaultDestPort,
 		baseDomain:      baseDomain,
 		db:              db,
