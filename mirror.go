@@ -207,7 +207,8 @@ func (p *Proxy) buildDestURL(rawDest, virtualHostName string) (*url.URL, error) 
 	if !strings.Contains(rawDest, "://") {
 		rawDest = "http://" + rawDest
 	}
-	rawDestURL, err := url.Parse(rawDest)
+	r := strings.Replace(rawDest, "{}", virtualHostName, -1)
+	rawDestURL, err := url.Parse(r)
 	if err != nil {
 		return nil, errors.Wrapf(err, "Invalid Upstream URL '%s'", rawDest)
 	}
@@ -219,12 +220,8 @@ func (p *Proxy) buildDestURL(rawDest, virtualHostName string) (*url.URL, error) 
 		hostport = net.JoinHostPort(rawDestURL.Host, p.defaultDestPort)
 	}
 
-	dest := rawDestURL.Scheme + "://" + hostport
-	switch {
-	case rawDestURL.Path != "":
-		p := strings.Replace(rawDestURL.Path, "{}", virtualHostName, -1)
-		dest = dest + p
-	case rawDestURL.RawQuery != "":
+	dest := rawDestURL.Scheme + "://" + hostport + rawDestURL.Path
+	if rawDestURL.RawQuery != "" {
 		dest = dest + "?" + rawDestURL.RawQuery
 	}
 
