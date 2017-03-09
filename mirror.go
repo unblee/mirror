@@ -282,10 +282,11 @@ func newRedis(host, port, defaultDestURL, hashKey string) (DB, error) {
 	return r, nil
 }
 
+// If the field does not exist, then the return value is the value of the "default" key
 func (r *Redis) get(field string) (string, error) {
 	reply, err := redis.String(r.conn.Do("HGET", r.hashKey, field))
 	switch {
-	case err == redis.ErrNil: // not exist field
+	case err == redis.ErrNil: // when the field not exist field
 		reply, _ = redis.String(r.conn.Do("HGET", r.hashKey, "default"))
 	case err != nil:
 		return "", errors.Wrapf(err, "Failed Redis Command 'HGET %s %s'", r.hashKey, field)
