@@ -179,9 +179,14 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		log.Errorln(err)
 		return
 	}
+
+	// First aid
 	if p.enableStream {
 		req.RequestURI = "/"
+	} else {
+		req.RequestURI = req.URL.Path
 	}
+
 	p.forwarder.ServeHTTP(w, req)
 }
 
