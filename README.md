@@ -40,4 +40,8 @@ Available Environment Values:
   REDIS_HASH_KEY           Hash key of Redis
     default: mirror-store
     e.g.) REDIS_HASH_KEY=mirror-store
+
+  STREAM                   Enable stream support
+    default: off(false)
+    e.g.) STREAM=on
 ```

@@ -56,6 +56,10 @@ Available Environment Values:
   REDIS_HASH_KEY           Hash key of Redis
     default: mirror-store
     e.g.) REDIS_HASH_KEY=mirror-store
+
+  STREAM                   Enable stream support
+    default: off(false)
+    e.g.) STREAM=on
 `
 
 const (
@@ -109,7 +113,12 @@ func main() {
 	}
 	defer redi.close()
 
-	proxy, err := newProxy(destPort, baseDomain, redi)
+	enableStream := false
+	if os.Getenv("STREAM") != "" {
+		enableStream = true
+	}
+
+	proxy, err := newProxy(destPort, baseDomain, redi, enableStream)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -135,10 +144,11 @@ type Proxy struct {
 	defaultDestPort string
 	baseDomain      string
 	db              DB
+	enableStream    bool
 }
 
-func newProxy(defaultDestPort, baseDomain string, db DB) (*Proxy, error) {
-	fwd, err := forward.New()
+func newProxy(defaultDestPort, baseDomain string, db DB, enableStream bool) (*Proxy, error) {
+	fwd, err := forward.New(forward.Stream(enableStream))
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to initialize forward proxy")
 	}
@@ -148,6 +158,7 @@ func newProxy(defaultDestPort, baseDomain string, db DB) (*Proxy, error) {
 		defaultDestPort: defaultDestPort,
 		baseDomain:      baseDomain,
 		db:              db,
+		enableStream:    enableStream,
 	}
 
 	return p, nil
@@ -166,10 +177,12 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintln(w, "404 Upstream Not Found")
 		log.Errorln(err)
-	} else {
-		req.RequestURI = req.URL.Path + req.URL.RawPath // First aid
-		p.forwarder.ServeHTTP(w, req)
+		return
 	}
+	if p.enableStream {
+		req.RequestURI = "/"
+	}
+	p.forwarder.ServeHTTP(w, req)
 }
 
 // vhost:      e.g.) example.foo.bar.127.0.0.1.xip.io:3344
@@ -189,9 +202,6 @@ func (p *Proxy) splitVirtualHostName(vHostName string) (string, error) {
 		host = vHostName
 	}
 
-	if !strings.Contains(host, p.baseDomain) { // when virtual host name is empty
-		return "default", nil
-	}
 	return strings.TrimSuffix(host, "."+p.baseDomain), nil
 }
 
