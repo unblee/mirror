@@ -4,14 +4,14 @@ VirtualHost based dynamic reverse proxy
 
 TODO: write document
 
-## Available Environment Values
+## Available Environment Variables
 
 ```
 Flags:
   -h, --help: this message
   --version:  show version
 
-Available Environment Values:
+Available Environment Variables:
   LISTEN_PORT              Listening port number
     default: 8080
     e.g.) LISTEN_PORT=8080
